@@ -26,7 +26,23 @@ headers = {
     'X-CMC_PRO_API_KEY': 'f24c5c79-59f8-4868-8a2a-0906526d062d' 
 }
 
-driver = webdriver.Chrome(ChromeDriverManager().install())
+
+def buscar_grupo(grupo):
+    campo_pesquisa = driver.find_element_by_xpath('//div[contains(@class,"copyable-text selectable-text")]')
+    sleep(2)
+    campo_pesquisa.click()
+    campo_pesquisa.send_keys(grupo)
+    campo_pesquisa.send_keys(Keys.ENTER)
+
+def enviar_mensagem(mensagem):
+    campo_mensagem = driver.find_elements_by_xpath('//div[contains(@class,"copyable-text selectable-text")]')
+    campo_mensagem[1].click()
+    sleep(3)
+    campo_mensagem[1].send_keys(mensagem)
+    campo_mensagem[1].send_keys(Keys.ENTER)
+
+
+driver = webdriver.Chrome(executable_path="chromedriver.exe")
 driver.implicitly_wait(10)
 driver.maximize_window()
 driver.get("https://web.whatsapp.com/")
@@ -34,13 +50,10 @@ driver.get("https://web.whatsapp.com/")
 while len(driver.find_elements_by_id('side')) < 1:
     sleep(1)
 
-driver.find_element_by_xpath('<div title="Search input textbox" role="textbox" class="_13NKt copyable-text selectable-text" contenteditable="true" data-tab="3" dir="ltr"></div>').click()
-driver.find_element_by_xpath('<div title="Search input textbox" role="textbox" class="_13NKt copyable-text selectable-text" contenteditable="true" data-tab="3" dir="ltr"></div>').send_keys('Space T.I')
-driver.find_element_by_xpath('//*[@id="pane-side"]/div[1]/div/div/div[1]/div/div/div[2]').click()
-driver.find_element_by_xpath('//*[@id="main"]/footer/div[1]/div/span[2]/div/div[2]/div[1]').click()
-
+buscar_grupo('Cotação')
 
 valor_antigo_spe = 0
+rodadas = 0
 while True:
     sessao = Session()
     sessao.headers.update(headers)
@@ -55,41 +68,29 @@ while True:
         calculo = valor_antigo_spe - spe
         porcetagem = int((calculo / valor_antigo_spe) * 100)
 
-        if porcetagem > 11:
-            print(f'''
-            *O SPE CAIU {porcetagem}%*
-            SPG: R$ {spg:,.2f}
-            SPE: R$ {spe:,.2f}
-            ''')
+        if porcetagem > 5:
+            mensagem = (f'------------\n*O SPE CAIU {porcetagem}%*\n*SPG*: _R$ {spg:,.2f}_\n*SPE*: _R$ {spe:,.2f}_')
+            enviar_mensagem(mensagem)
         else:
-            print(f'''
-            SPG: R$ {spg:,.2f}
-            SPE: R$ {spe:,.2f}
-            ''')
+            mensagem = (f'\n------------\n*SPG*: _R$ {spg:,.2f}_\n*SPE*: _R$ {spe:,.2f}_')
+            enviar_mensagem(mensagem)
 
     elif spe > valor_antigo_spe:
         calculo =  spe - valor_antigo_spe
         porcetagem = int((calculo / spe) * 100)
 
-        if porcetagem > 11:
-            print(f'''
-            *O SPE SUBIU {porcetagem}%*
-            SPG: R$ {spg:,.2f}
-            SPE: R$ {spe:,.2f}
-            ''')
+        if porcetagem > 5 and rodadas > 0:
+            mensagem = (f'\n------------\n*O SPE SUBIU {porcetagem}%*\n*SPG*: _R$ {spg:,.2f}_\n*SPE*: _R$ {spe:,.2f}_')
+            enviar_mensagem(mensagem)
 
         else:
-            print(f'''
-            SPG: R$ {spg:,.2f}
-            SPE: R$ {spe:,.2f}
-            ''')
+            mensagem = (f'\n------------\n*SPG*: _R$ {spg:,.2f}_\n*SPE*: _R$ {spe:,.2f}_')
+            enviar_mensagem(mensagem)
 
         
     valor_antigo_spe = spe
-    sleep(180)
+    sleep(300)
+    rodadas += 1
 
 
 
-
-# print(f'SPG: R$ {spg:,.2f}')
-# print(f'SPE: R$ {spe:,.2f}')
